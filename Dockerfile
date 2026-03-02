@@ -1,8 +1,13 @@
-FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy
+FROM python:3.12-slim
 WORKDIR /app
 
 COPY pyproject.toml .
 RUN pip install --no-cache-dir -e .
+
+# Install Chromium only (skips Firefox + WebKit) + its system deps
+RUN playwright install --with-deps chromium \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY *.py ./
 COPY templates/ ./templates/
