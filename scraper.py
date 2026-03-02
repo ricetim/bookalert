@@ -91,6 +91,9 @@ def _parse(html: str) -> ScrapeResult:
         if re.search(r"Rental\s*-\s*\d+\s*days", card_text):
             continue
 
+        if re.search(r"kindle|ebook|e-book|download now", card_text, re.IGNORECASE):
+            continue
+
         # First font-bold span with a dollar amount is the listing price
         price: Optional[float] = None
         for span in card.find_all("span", class_="font-bold"):
