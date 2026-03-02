@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ book['title'] if book else isbn }} — Bookalert{% endblock %}
+{% block page_title %} - {{ book['title'] if book else isbn }}{% endblock %}
 
 {% block head %}
 <style>
@@ -11,7 +11,7 @@
 <a href="{{ url_for('books') }}" class="text-secondary text-decoration-none small">&larr; Back to Books</a>
 
 <div class="d-flex align-items-start gap-3 mt-3 mb-4">
-  <img src="https://covers.openlibrary.org/b/isbn/{{ isbn }}-M.jpg"
+  <img src="https://covers.openlibrary.org/b/isbn/{{ isbn }}-M.jpg?default=false"
        style="width:80px;border-radius:4px;flex-shrink:0"
        onerror="this.style.display='none'" alt="">
   <div>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Books — Bookalert{% endblock %}
+{% block page_title %} - Books{% endblock %}
 
 {% block content %}
 <div class="d-flex align-items-center mb-4">
@@ -27,8 +27,8 @@
       <tr id="row-{{ b['isbn'] }}">
         <td>
           <div class="d-flex align-items-center gap-2">
-            <img src="https://covers.openlibrary.org/b/isbn/{{ b['isbn'] }}-S.jpg"
-                 style="width:28px;height:40px;object-fit:cover;border-radius:2px;flex-shrink:0"
+            <img src="https://covers.openlibrary.org/b/isbn/{{ b['isbn'] }}-S.jpg?default=false"
+                 style="width:40px;height:56px;object-fit:cover;border-radius:3px;flex-shrink:0"
                  onerror="this.style.display='none'" alt="">
             <div>
               <a href="{{ url_for('history', isbn=b['isbn']) }}" class="text-decoration-none text-light">{{ b['title'] }}</a>
@@ -59,7 +59,7 @@
             class="btn btn-outline-danger btn-sm"
             hx-post="{{ url_for('remove', isbn=b['isbn']) }}"
             hx-target="#row-{{ b['isbn'] }}"
-            hx-swap="outerHTML"
+            hx-swap="delete"
             hx-confirm="Remove {{ b['title'] }}?"
           >Remove</button>
         </td>
