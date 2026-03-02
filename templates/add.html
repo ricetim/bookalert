@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Add Book — Bookalert{% endblock %}
+
+{% block content %}
+<h1 class="h4 mb-4">Add Book</h1>
+
+<div class="card bg-dark border-secondary" style="max-width: 500px;">
+  <div class="card-body">
+    {% if errors %}
+    <div class="alert alert-danger py-2">
+      {% for e in errors %}<div>{{ e }}</div>{% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('add_submit') }}">
+      <div class="mb-3">
+        <label class="form-label text-secondary small">ISBN</label>
+        <input type="text" name="isbn" class="form-control bg-dark border-secondary text-light"
+               value="{{ isbn or '' }}" placeholder="e.g. 9780143127741" required>
+        <div class="form-text text-secondary">10 or 13 digit ISBN</div>
+      </div>
+      <div class="mb-4">
+        <label class="form-label text-secondary small">Target Price (USD)</label>
+        <div class="input-group">
+          <span class="input-group-text bg-dark border-secondary text-secondary">$</span>
+          <input type="number" name="target_price" step="0.01" min="0.01"
+                 class="form-control bg-dark border-secondary text-light"
+                 value="{{ target_price or '' }}" placeholder="12.00" required>
+        </div>
+        <div class="form-text text-secondary">Alert when lowest price is at or below this</div>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Add Book</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

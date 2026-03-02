@@ -1,0 +1,2 @@
+Bookalert is a project that automates book price listing alerts from the website bookfinder.com. It allows a user to input an ISBN number (9 or 13 digit) and a target price. It then automatically checks bookfinder every 30 minutes for price information on that book (and all others that have been previously entered by the user) and looks to see if a copy is available at the chosen price. If it is, it sends an alert to the user, notifying them up that the book is ready for purchase.
+

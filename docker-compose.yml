@@ -1,0 +1,22 @@
+services:
+  bookalert:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - bookalert-data:/data
+    environment:
+      BOOKALERT_DB_PATH: /data/bookalert.db
+      BOOKALERT_JOIN_API_KEY: ""       # set your key here
+      BOOKALERT_JOIN_DEVICE_ID: ""     # set your device ID here
+      BOOKALERT_CHECK_INTERVAL: "30"
+      FLASK_DEBUG: "0"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  bookalert-data:

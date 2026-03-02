@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Books — Bookalert{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-4">
+  <h1 class="h4 mb-0 me-auto">Monitored Books</h1>
+  <a href="{{ url_for('add_form') }}" class="btn btn-primary btn-sm">+ Add Book</a>
+</div>
+
+{% if books %}
+<div class="card bg-dark border-secondary">
+  <table class="table table-dark table-hover table-sm mb-0">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Author</th>
+        <th>ISBN</th>
+        <th>Target</th>
+        <th>Current Price</th>
+        <th>Condition</th>
+        <th>Last Checked</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="book-list">
+      {% for b in books %}
+      <tr id="row-{{ b['isbn'] }}">
+        <td>
+          <a href="{{ url_for('history', isbn=b['isbn']) }}" class="text-decoration-none text-light">
+            {{ b['title'] }}
+          </a>
+        </td>
+        <td class="text-secondary">{{ b['author'] }}</td>
+        <td class="text-secondary font-monospace">{{ b['isbn'] }}</td>
+        <td>${{ '%.2f' % b['target_price'] }}</td>
+        <td>
+          {% if b['current_price'] is not none %}
+            {% if b['current_price'] <= b['target_price'] %}
+              <span class="price-ok">${{ '%.2f' % b['current_price'] }}</span>
+            {% else %}
+              <span class="price-high">${{ '%.2f' % b['current_price'] }}</span>
+            {% endif %}
+          {% else %}
+            <span class="text-secondary">—</span>
+          {% endif %}
+        </td>
+        <td class="text-secondary">{{ b['current_condition'] or '—' }}</td>
+        <td class="text-secondary small">{{ b['price_as_of'][:16] if b['price_as_of'] else '—' }}</td>
+        <td>
+          <button
+            class="btn btn-outline-danger btn-sm"
+            hx-post="{{ url_for('remove', isbn=b['isbn']) }}"
+            hx-target="#row-{{ b['isbn'] }}"
+            hx-swap="outerHTML"
+            hx-confirm="Remove {{ b['title'] }}?"
+          >Remove</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="card bg-dark border-secondary p-4 text-center text-secondary">
+  No books yet. <a href="{{ url_for('add_form') }}">Add one now.</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+[Unit]
+Description=Bookalert book price monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/bookalert daemon
+Restart=on-failure
+RestartSec=60
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bookalert
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target
