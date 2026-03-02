@@ -62,7 +62,7 @@
 <body>
 
 <nav id="sidebar">
-  <div class="brand">📚 Bookalert</div>
+  <a class="brand text-decoration-none" href="{{ url_for('books') }}">📚 Bookalert</a>
   <ul class="nav flex-column">
     <li class="nav-item">
       <a class="nav-link {% if request.endpoint == 'books' %}active{% endif %}" href="{{ url_for('books') }}">Books</a>
