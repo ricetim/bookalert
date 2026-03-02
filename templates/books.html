@@ -26,9 +26,17 @@
       {% for b in books %}
       <tr id="row-{{ b['isbn'] }}">
         <td>
-          <a href="{{ url_for('history', isbn=b['isbn']) }}" class="text-decoration-none text-light">
-            {{ b['title'] }}
-          </a>
+          <div class="d-flex align-items-center gap-2">
+            <img src="https://covers.openlibrary.org/b/isbn/{{ b['isbn'] }}-S.jpg"
+                 style="width:28px;height:40px;object-fit:cover;border-radius:2px;flex-shrink:0"
+                 onerror="this.style.display='none'" alt="">
+            <div>
+              <a href="{{ url_for('history', isbn=b['isbn']) }}" class="text-decoration-none text-light">{{ b['title'] }}</a>
+              <br>
+              <a href="https://www.bookfinder.com/search/?isbn={{ b['isbn'] }}&st=xl&ac=qr&submit="
+                 target="_blank" class="text-secondary text-decoration-none" style="font-size:.75rem">Bookfinder ↗</a>
+            </div>
+          </div>
         </td>
         <td class="text-secondary">{{ b['author'] }}</td>
         <td class="text-secondary font-monospace">{{ b['isbn'] }}</td>

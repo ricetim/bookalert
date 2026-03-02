@@ -6,7 +6,7 @@ import time
 import uuid
 from pathlib import Path
 
-from flask import Flask, render_template, request, redirect, url_for, make_response
+from flask import Flask, render_template, request, redirect, url_for
 
 from config import load_config
 from daemon import run_check_cycle
@@ -193,8 +193,7 @@ def alerts():
 def remove(isbn: str):
     with _conn() as conn:
         remove_book(conn, isbn)
-    resp = make_response("", 204)
-    return resp
+    return "", 200
 
 
 # ---------------------------------------------------------------------------
