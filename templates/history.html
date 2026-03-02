@@ -1,68 +1,85 @@
 {% extends "base.html" %}
-{% block page_title %} - {{ book['title'] if book else isbn }}{% endblock %}
+{% block page_title %} — {{ book['title'] if book else isbn }}{% endblock %}
 
 {% block head %}
 <style>
-  .chart-wrap { position: relative; height: 280px; }
+  .chart-wrap { position: relative; height: 260px; }
+  /* edit button always visible on this page (no table row hover context) */
+  #target-cell-{{ isbn }} .btn-edit-price { opacity: 1; }
 </style>
 {% endblock %}
 
 {% block content %}
-<a href="{{ url_for('books') }}" class="text-secondary text-decoration-none small">&larr; Back to Books</a>
+<a href="{{ url_for('books') }}" class="link-muted" style="display:inline-block;margin-bottom:1.25rem">← Back to Books</a>
 
-<div class="d-flex align-items-start gap-3 mt-3 mb-4">
+<div style="display:flex;align-items:flex-start;gap:1.25rem;margin-bottom:1.75rem">
   <img src="https://covers.openlibrary.org/b/isbn/{{ isbn }}-M.jpg?default=false"
-       style="width:120px;border-radius:4px;flex-shrink:0"
+       style="width:80px;border-radius:4px;border:1px solid var(--border-light);flex-shrink:0"
        onerror="this.style.display='none'" alt="">
   <div>
-    <h1 class="h4 mb-0">{{ book['title'] if book else isbn }}</h1>
+    <h1 style="font-size:1.4rem;font-weight:700;line-height:1.2;margin-bottom:0.3rem">
+      {{ book['title'] if book else isbn }}
+    </h1>
     {% if book %}
-    <div class="text-secondary">{{ book['author'] }} &nbsp;·&nbsp; Target: ${{ '%.2f' % book['target_price'] }}</div>
+    <div style="color:var(--text-secondary);font-size:0.875rem;margin-bottom:0.35rem">
+      {{ book['author'] }}
+      <span style="color:var(--text-muted)"> · Target:
+        <span id="target-cell-{{ isbn }}" style="display:inline-flex;align-items:baseline;gap:0.2rem">
+          <span class="mono" style="color:var(--text-primary)">${{ '%.2f' % book['target_price'] }}</span>
+          <button class="btn-edit-price" style="opacity:1;font-size:0.75rem"
+                  hx-get="{{ url_for('edit_target', isbn=isbn) }}"
+                  hx-target="#target-cell-{{ isbn }}"
+                  hx-swap="innerHTML"
+                  title="Edit target price">✎</button>
+        </span>
+      </span>
+    </div>
     {% endif %}
-    <div class="text-secondary small font-monospace mt-1">ISBN {{ isbn }}</div>
+    <div class="mono td-muted" style="font-size:0.75rem;margin-bottom:0.75rem">ISBN {{ isbn }}</div>
     <a href="https://www.bookfinder.com/search/?isbn={{ isbn }}&st=xl&ac=qr&submit="
-       target="_blank" class="btn btn-outline-secondary btn-sm mt-2">Buy on Bookfinder ↗</a>
+       target="_blank"
+       class="btn-ghost-sm">Buy on Bookfinder ↗</a>
   </div>
 </div>
 
 {% if rows %}
-<div class="card bg-dark border-secondary mb-4">
-  <div class="card-body">
+<div class="ba-card" style="margin-bottom:1rem">
+  <div class="ba-card-body">
     <div class="chart-wrap">
       <canvas id="priceChart"></canvas>
     </div>
   </div>
 </div>
 
-<div class="card bg-dark border-secondary">
-  <table class="table table-dark table-hover table-sm mb-0">
+<div class="ba-card">
+  <table class="ba-table">
     <thead>
       <tr>
         <th>Date</th>
         <th>Lowest Price</th>
         <th>Condition</th>
-        <th>Alert</th>
+        <th>Status</th>
       </tr>
     </thead>
     <tbody>
       {% for r in rows %}
       <tr>
-        <td class="text-secondary small">{{ r['checked_at'][:16] }}</td>
+        <td class="td-muted td-mono" style="font-size:0.75rem">{{ r['checked_at'][:16] }}</td>
         <td>
           {% if r['lowest_price'] is not none %}
             {% if r['available'] %}
-              <span class="price-ok">${{ '%.2f' % r['lowest_price'] }}</span>
+              <span class="price-ok">↓ ${{ '%.2f' % r['lowest_price'] }}</span>
             {% else %}
               <span class="price-high">${{ '%.2f' % r['lowest_price'] }}</span>
             {% endif %}
           {% else %}
-            <span class="text-secondary">—</span>
+            <span class="td-muted">—</span>
           {% endif %}
         </td>
-        <td class="text-secondary">{{ r['condition'] or '—' }}</td>
+        <td class="td-secondary" style="font-size:0.85rem">{{ r['condition'] or '—' }}</td>
         <td>
           {% if r['available'] %}
-            <span class="badge bg-success">Target met</span>
+            <span class="badge-met">✓ Target met</span>
           {% endif %}
         </td>
       </tr>
@@ -73,45 +90,84 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  var chartData = {{ chart_json | safe }};
-  var canvas = document.getElementById('priceChart');
-  new Chart(canvas, {
+  var d = {{ chart_json | safe }};
+  var ctx = document.getElementById('priceChart');
+  var targetPrice = {{ book['target_price'] if book else 'null' }};
+
+  var datasets = [{
+    label: 'Lowest Price',
+    data: d.prices,
+    spanGaps: true,
+    borderColor: '#4ea8de',
+    backgroundColor: 'rgba(78,168,222,0.07)',
+    borderWidth: 2,
+    pointRadius: 3.5,
+    pointBackgroundColor: '#4ea8de',
+    pointBorderColor: '#20232c',
+    pointBorderWidth: 1.5,
+    fill: true,
+    tension: 0.35,
+  }];
+
+  if (targetPrice !== null && d.labels.length > 0) {
+    datasets.push({
+      label: 'Target',
+      data: Array(d.labels.length).fill(targetPrice),
+      borderColor: 'rgba(34,197,94,0.5)',
+      borderDash: [5, 4],
+      borderWidth: 1.5,
+      pointRadius: 0,
+      fill: false,
+      tension: 0,
+    });
+  }
+
+  new Chart(ctx, {
     type: 'line',
-    data: {
-      labels: chartData.labels,
-      datasets: [{
-        label: 'Lowest Price ($)',
-        data: chartData.prices,
-        spanGaps: true,
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59,130,246,0.08)',
-        borderWidth: 2,
-        pointRadius: 3,
-        fill: true,
-        tension: 0.3,
-      }]
-    },
+    data: { labels: d.labels, datasets: datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { display: false },
+        legend: {
+          display: datasets.length > 1,
+          labels: {
+            color: '#94a3b8',
+            font: { family: "'JetBrains Mono', monospace", size: 11 },
+            boxWidth: 18,
+            padding: 16,
+          }
+        },
         tooltip: {
+          backgroundColor: '#272b35',
+          borderColor: '#2e3340',
+          borderWidth: 1,
+          titleColor: '#e2e8f0',
+          bodyColor: '#94a3b8',
+          titleFont: { family: "'Outfit', sans-serif", size: 12, weight: '600' },
+          bodyFont:  { family: "'JetBrains Mono', monospace", size: 11 },
+          padding: 10,
           callbacks: {
             label: function(ctx) {
-              return ctx.parsed.y != null ? '$' + ctx.parsed.y.toFixed(2) : 'N/A';
+              if (ctx.parsed.y === null) return ctx.dataset.label + ': N/A';
+              return ctx.dataset.label + ': $' + ctx.parsed.y.toFixed(2);
             }
           }
         }
       },
       scales: {
-        x: { ticks: { color: '#94a3b8', maxTicksLimit: 10 }, grid: { color: '#2d3139' } },
+        x: {
+          ticks: { color: '#576070', font: { family: "'JetBrains Mono', monospace", size: 10 }, maxTicksLimit: 8 },
+          grid: { color: 'rgba(46,51,64,0.8)' }
+        },
         y: {
           ticks: {
-            color: '#94a3b8',
+            color: '#576070',
+            font: { family: "'JetBrains Mono', monospace", size: 10 },
             callback: function(v) { return '$' + v.toFixed(2); }
           },
-          grid: { color: '#2d3139' }
+          grid: { color: 'rgba(46,51,64,0.8)' }
         }
       }
     }
@@ -120,8 +176,8 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 {% else %}
-<div class="card bg-dark border-secondary p-4 text-center text-secondary">
-  No price history yet for this book.
+<div class="ba-card ba-card-body" style="text-align:center;padding:3rem 2rem">
+  <div style="font-size:1rem;color:var(--text-secondary)">No price history recorded yet.</div>
 </div>
 {% endif %}
 {% endblock %}

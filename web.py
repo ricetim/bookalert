@@ -10,7 +10,7 @@ from flask import Flask, render_template, request, redirect, url_for
 
 from config import load_config
 from daemon import run_check_cycle
-from db import get_connection, init_db, add_book, remove_book, list_books, get_history, get_alerts, record_price
+from db import get_connection, init_db, add_book, remove_book, list_books, get_history, get_alerts, record_price, update_target_price
 from scraper import fetch_book
 
 log = logging.getLogger(__name__)
@@ -187,6 +187,42 @@ def alerts():
     with _conn() as conn:
         rows = get_alerts(conn)
     return render_template("alerts.html", alerts=rows)
+
+
+@app.get("/target-display/<isbn>")
+def target_display(isbn: str):
+    with _conn() as conn:
+        book = conn.execute(
+            "SELECT target_price FROM books WHERE isbn = ? AND active = 1", (isbn,)
+        ).fetchone()
+    if not book:
+        return "", 404
+    return render_template("_target_display.html", isbn=isbn, target_price=book["target_price"])
+
+
+@app.get("/edit-target/<isbn>")
+def edit_target(isbn: str):
+    with _conn() as conn:
+        book = conn.execute(
+            "SELECT target_price FROM books WHERE isbn = ? AND active = 1", (isbn,)
+        ).fetchone()
+    if not book:
+        return "", 404
+    return render_template("_target_edit.html", isbn=isbn, target_price=book["target_price"])
+
+
+@app.post("/update-target/<isbn>")
+def update_target(isbn: str):
+    raw = request.form.get("target_price", "").strip()
+    try:
+        price = float(raw)
+        if price <= 0:
+            raise ValueError("non-positive")
+    except ValueError:
+        return "Invalid price", 400
+    with _conn() as conn:
+        update_target_price(conn, isbn, price)
+    return render_template("_target_display.html", isbn=isbn, target_price=price)
 
 
 @app.post("/remove/<isbn>")

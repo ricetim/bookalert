@@ -1,24 +1,45 @@
 {% extends "base.html" %}
-{% block page_title %} - Books{% endblock %}
+{% block page_title %} — Books{% endblock %}
+
+{% block head %}
+<style>
+  .btn-edit-price {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 0 0.2rem;
+    margin-left: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+    vertical-align: baseline;
+    line-height: 1;
+  }
+
+  .ba-table tbody tr:hover .btn-edit-price { opacity: 1; }
+  .btn-edit-price:hover { color: var(--accent-text); }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex align-items-center mb-4">
-  <h1 class="h4 mb-0 me-auto">Monitored Books</h1>
-  <a href="{{ url_for('add_form') }}" class="btn btn-primary btn-sm">+ Add Book</a>
+<div class="page-header">
+  <h1 class="page-title">Monitored Books</h1>
+  <a href="{{ url_for('add_form') }}" class="btn-primary">+ Add Book</a>
 </div>
 
 {% if books %}
-<div class="card bg-dark border-secondary">
-  <table class="table table-dark table-hover table-sm mb-0">
+<div class="ba-card">
+  <table class="ba-table">
     <thead>
       <tr>
-        <th>Title</th>
+        <th style="width:34%">Book</th>
         <th>Author</th>
         <th>ISBN</th>
         <th>Target</th>
-        <th>Current Price</th>
+        <th>Current</th>
         <th>Condition</th>
-        <th>Last Checked</th>
+        <th>Checked</th>
         <th></th>
       </tr>
     </thead>
@@ -26,37 +47,49 @@
       {% for b in books %}
       <tr id="row-{{ b['isbn'] }}">
         <td>
-          <div class="d-flex align-items-center gap-2">
+          <div style="display:flex;align-items:center;gap:0.75rem">
             <img src="https://covers.openlibrary.org/b/isbn/{{ b['isbn'] }}-S.jpg?default=false"
-                 style="width:52px;height:72px;object-fit:cover;border-radius:3px;flex-shrink:0"
+                 class="book-cover"
                  onerror="this.style.display='none'" alt="">
             <div>
-              <a href="{{ url_for('history', isbn=b['isbn']) }}" class="text-decoration-none text-light">{{ b['title'] }}</a>
-              <br>
+              <a href="{{ url_for('history', isbn=b['isbn']) }}"
+                 class="link-silent"
+                 style="font-weight:600;font-size:0.9rem;line-height:1.35;display:block">{{ b['title'] }}</a>
               <a href="https://www.bookfinder.com/search/?isbn={{ b['isbn'] }}&st=xl&ac=qr&submit="
-                 target="_blank" class="btn btn-outline-secondary btn-sm mt-1" style="font-size:.7rem;padding:.15rem .4rem">Buy on Bookfinder ↗</a>
+                 target="_blank"
+                 class="btn-ghost-sm"
+                 style="margin-top:0.35rem;display:inline-block">Bookfinder ↗</a>
             </div>
           </div>
         </td>
-        <td class="text-secondary">{{ b['author'] }}</td>
-        <td class="text-secondary font-monospace">{{ b['isbn'] }}</td>
-        <td>${{ '%.2f' % b['target_price'] }}</td>
+        <td class="td-secondary">{{ b['author'] }}</td>
+        <td class="td-muted td-mono">{{ b['isbn'] }}</td>
+        <td id="target-cell-{{ b['isbn'] }}">
+          <span class="price-val">${{ '%.2f' % b['target_price'] }}</span>
+          <button class="btn-edit-price"
+                  hx-get="{{ url_for('edit_target', isbn=b['isbn']) }}"
+                  hx-target="#target-cell-{{ b['isbn'] }}"
+                  hx-swap="innerHTML"
+                  title="Edit target price">✎</button>
+        </td>
         <td>
           {% if b['current_price'] is not none %}
             {% if b['current_price'] <= b['target_price'] %}
-              <span class="price-ok">${{ '%.2f' % b['current_price'] }}</span>
+              <span class="price-ok">↓ ${{ '%.2f' % b['current_price'] }}</span>
             {% else %}
               <span class="price-high">${{ '%.2f' % b['current_price'] }}</span>
             {% endif %}
           {% else %}
-            <span class="text-secondary">—</span>
+            <span class="td-muted">—</span>
           {% endif %}
         </td>
-        <td class="text-secondary">{{ b['current_condition'] or '—' }}</td>
-        <td class="text-secondary small">{{ b['price_as_of'][:16] if b['price_as_of'] else '—' }}</td>
+        <td class="td-secondary" style="font-size:0.82rem">{{ b['current_condition'] or '—' }}</td>
+        <td class="td-muted td-mono" style="font-size:0.72rem">
+          {{ b['price_as_of'][:16] if b['price_as_of'] else '—' }}
+        </td>
         <td>
           <button
-            class="btn btn-outline-danger btn-sm"
+            class="btn-danger-ghost"
             hx-post="{{ url_for('remove', isbn=b['isbn']) }}"
             hx-target="#row-{{ b['isbn'] }}"
             hx-swap="delete"
@@ -69,8 +102,14 @@
   </table>
 </div>
 {% else %}
-<div class="card bg-dark border-secondary p-4 text-center text-secondary">
-  No books yet. <a href="{{ url_for('add_form') }}">Add one now.</a>
+<div class="ba-card ba-card-body" style="text-align:center;padding:3.5rem 2rem">
+  <div style="font-size:1.1rem;font-weight:600;color:var(--text-secondary);margin-bottom:0.4rem">
+    No books being monitored
+  </div>
+  <div style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1.5rem">
+    Add a book by ISBN to start tracking its price.
+  </div>
+  <a href="{{ url_for('add_form') }}" class="btn-primary">Add your first book</a>
 </div>
 {% endif %}
 {% endblock %}

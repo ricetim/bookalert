@@ -1,0 +1,20 @@
+<form hx-post="{{ url_for('update_target', isbn=isbn) }}"
+      hx-target="#target-cell-{{ isbn }}"
+      hx-swap="innerHTML"
+      style="display:flex;align-items:center;gap:0.3rem">
+  <input type="number"
+         name="target_price"
+         value="{{ '%.2f' % target_price }}"
+         step="0.01"
+         min="0.01"
+         required
+         autofocus
+         style="width:80px;background:var(--bg-surface);border:1px solid var(--accent);color:var(--text-primary);border-radius:4px;padding:.28rem .45rem;font-family:var(--font-mono);font-size:0.82rem;outline:none;box-shadow:0 0 0 2px var(--accent-dim)">
+  <button type="submit"
+          style="background:var(--accent);border:none;color:#0d1117;border-radius:4px;padding:.28rem .55rem;cursor:pointer;font-size:0.75rem;font-weight:600;line-height:1.4">✓</button>
+  <button type="button"
+          hx-get="{{ url_for('target_display', isbn=isbn) }}"
+          hx-target="#target-cell-{{ isbn }}"
+          hx-swap="innerHTML"
+          style="background:var(--bg-surface);border:1px solid var(--border-light);color:var(--text-secondary);border-radius:4px;padding:.28rem .55rem;cursor:pointer;font-size:0.75rem;line-height:1.4">✗</button>
+</form>

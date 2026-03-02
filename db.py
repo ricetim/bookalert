@@ -112,6 +112,15 @@ def record_price(
     return available
 
 
+def update_target_price(conn: sqlite3.Connection, isbn: str, price: float) -> bool:
+    cur = conn.execute(
+        "UPDATE books SET target_price = ? WHERE isbn = ? AND active = 1",
+        (price, isbn),
+    )
+    conn.commit()
+    return cur.rowcount > 0
+
+
 def get_history(conn: sqlite3.Connection, isbn: str) -> list[sqlite3.Row]:
     return conn.execute(
         """

@@ -1,0 +1,6 @@
+<span class="price-val">${{ '%.2f' % target_price }}</span>
+<button class="btn-edit-price"
+        hx-get="{{ url_for('edit_target', isbn=isbn) }}"
+        hx-target="#target-cell-{{ isbn }}"
+        hx-swap="innerHTML"
+        title="Edit target price">✎</button>
