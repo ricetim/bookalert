@@ -1,4 +1,3 @@
-import os
 import re
 from dataclasses import dataclass
 from typing import Optional
@@ -25,7 +24,6 @@ def fetch_book(isbn: str) -> ScrapeResult:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(
                 headless=True,
-                executable_path=os.environ.get("CHROMIUM_EXECUTABLE_PATH"),
                 args=[
                     "--disable-blink-features=AutomationControlled",
                     "--no-sandbox",
