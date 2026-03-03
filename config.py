@@ -14,6 +14,9 @@ DEFAULTS = {
     "database": {
         "path": "~/.local/share/bookalert/bookalert.db",
     },
+    "web": {
+        "base_url": "",
+    },
 }
 
 

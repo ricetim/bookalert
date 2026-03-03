@@ -15,6 +15,7 @@ def send_notification(
     price: float,
     target: float,
     condition: str = "",
+    icon_url: str = "",
 ) -> bool:
     cond_str = f" [{condition}]" if condition else ""
     params = {
@@ -25,8 +26,9 @@ def send_notification(
             f"{title} by {author} is available for ${price:.2f}{cond_str} "
             f"(target: ${target:.2f})"
         ),
-        "icon": "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4da.png",
     }
+    if icon_url:
+        params["icon"] = icon_url
     try:
         resp = requests.get(JOIN_URL, params=params, timeout=10)
         resp.raise_for_status()

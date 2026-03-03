@@ -11,6 +11,7 @@ RUN playwright install --with-deps chromium \
 
 COPY *.py ./
 COPY templates/ ./templates/
+COPY static/ ./static/
 
 RUN mkdir -p /data
 
