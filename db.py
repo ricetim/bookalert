@@ -34,6 +34,14 @@ def init_db(conn: sqlite3.Connection) -> None:
 
         CREATE INDEX IF NOT EXISTS idx_price_history_isbn
             ON price_history (isbn, checked_at DESC);
+
+        CREATE TABLE IF NOT EXISTS alerts_sent (
+            isbn       TEXT NOT NULL,
+            price      REAL NOT NULL,
+            condition  TEXT NOT NULL DEFAULT '',
+            alerted_at TEXT NOT NULL DEFAULT (datetime('now')),
+            PRIMARY KEY (isbn, price, condition)
+        );
     """)
     # Migrate existing DBs that predate the condition column
     try:
@@ -110,6 +118,25 @@ def record_price(
     )
     conn.commit()
     return available
+
+
+def is_alert_sent(conn: sqlite3.Connection, isbn: str, price: float, condition: str) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM alerts_sent WHERE isbn = ? AND price = ? AND condition = ?",
+        (isbn, price, condition),
+    ).fetchone()
+    return row is not None
+
+
+def mark_alert_sent(conn: sqlite3.Connection, isbn: str, price: float, condition: str) -> None:
+    conn.execute(
+        """
+        INSERT OR IGNORE INTO alerts_sent (isbn, price, condition, alerted_at)
+        VALUES (?, ?, ?, datetime('now'))
+        """,
+        (isbn, price, condition),
+    )
+    conn.commit()
 
 
 def update_target_price(conn: sqlite3.Connection, isbn: str, price: float) -> bool:

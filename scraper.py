@@ -1,5 +1,5 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 from bs4 import BeautifulSoup
@@ -15,6 +15,7 @@ class ScrapeResult:
     author: str = ""
     lowest_price: Optional[float] = None
     condition: str = ""
+    listings: list[tuple[float, str]] = field(default_factory=list)
     error: str = ""
 
 
@@ -141,4 +142,5 @@ def _parse(html: str) -> ScrapeResult:
         author=author,
         lowest_price=lowest_price,
         condition=condition,
+        listings=listings,
     )

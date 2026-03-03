@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 
 from config import load_config
-from db import get_connection, get_active_books, init_db, record_price
+from db import get_connection, get_active_books, init_db, record_price, is_alert_sent, mark_alert_sent
 from notifier import send_notification
 from scraper import fetch_book
 
@@ -41,26 +41,23 @@ def run_check_cycle(cfg: configparser.ConfigParser) -> None:
             cond_str = f" ({result.condition})" if result.condition else ""
             log.info("  Lowest price: %s%s", price_str, cond_str)
 
-            available = record_price(conn, isbn, result.lowest_price, target, result.condition)
+            record_price(conn, isbn, result.lowest_price, target, result.condition)
 
-            if available:
-                log.info("  Target met — sending notification.")
+            qualifying = [(p, c) for p, c in result.listings if p <= target]
+            for price, condition in qualifying:
+                if is_alert_sent(conn, isbn, price, condition):
+                    continue
+                log.info("  New listing at $%.2f (%s) — sending notification.", price, condition)
                 if api_key and device_id:
-                    sent = send_notification(
-                        api_key,
-                        device_id,
-                        title,
-                        author,
-                        result.lowest_price,
-                        target,
-                        result.condition,
-                    )
+                    sent = send_notification(api_key, device_id, title, author, price, target, condition)
                     if sent:
+                        mark_alert_sent(conn, isbn, price, condition)
                         log.info("  Notification sent.")
                     else:
                         log.warning("  Notification failed.")
                 else:
                     log.warning("  Join api_key/device_id not configured — skipping notification.")
+                    mark_alert_sent(conn, isbn, price, condition)
 
     log.info("Check cycle complete.")
 
