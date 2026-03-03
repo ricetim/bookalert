@@ -6,7 +6,10 @@ import time
 import uuid
 from pathlib import Path
 
-from flask import Flask, render_template, request, redirect, url_for
+import re
+
+import requests
+from flask import Flask, render_template, request, redirect, url_for, send_file
 
 from config import load_config
 from daemon import run_check_cycle
@@ -37,6 +40,24 @@ def _build_cfg():
 
 cfg = _build_cfg()
 db_path = Path(cfg["database"]["path"]).expanduser()
+covers_dir = db_path.parent / "covers"
+
+
+def _cache_cover(isbn: str) -> None:
+    """Download and cache a book cover from Open Library if not already stored."""
+    covers_dir.mkdir(parents=True, exist_ok=True)
+    dest = covers_dir / f"{isbn}.jpg"
+    if dest.exists():
+        return
+    try:
+        resp = requests.get(
+            f"https://covers.openlibrary.org/b/isbn/{isbn}-M.jpg?default=false",
+            timeout=10,
+        )
+        if resp.status_code == 200 and resp.headers.get("content-type", "").startswith("image"):
+            dest.write_bytes(resp.content)
+    except requests.exceptions.RequestException:
+        pass
 
 
 def _conn():
@@ -66,6 +87,8 @@ def _run_add_job(job_id: str, isbn: str, target_price: float) -> None:
             add_book(conn, isbn, result.title, result.author, target_price)
             record_price(conn, isbn, result.lowest_price, target_price, result.condition)
 
+        _cache_cover(isbn)
+
         price_str = f"${result.lowest_price:.2f}" if result.lowest_price is not None else "N/A"
         with _jobs_lock:
             _jobs[job_id] = {
@@ -89,6 +112,16 @@ def _run_add_job(job_id: str, isbn: str, target_price: float) -> None:
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/cover/<isbn>")
+def cover(isbn: str):
+    if not re.fullmatch(r"[\dX\-]+", isbn):
+        return "", 404
+    path = covers_dir / f"{isbn}.jpg"
+    if not path.exists():
+        return "", 404
+    return send_file(path, mimetype="image/jpeg")
 
 
 @app.get("/")

@@ -48,7 +48,7 @@
       <tr id="row-{{ b['isbn'] }}">
         <td>
           <div style="display:flex;align-items:center;gap:0.75rem">
-            <img src="https://covers.openlibrary.org/b/isbn/{{ b['isbn'] }}-S.jpg?default=false"
+            <img src="{{ url_for('cover', isbn=b['isbn']) }}"
                  class="book-cover"
                  onerror="this.style.display='none'" alt="">
             <div>
