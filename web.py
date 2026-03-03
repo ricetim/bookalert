@@ -280,12 +280,20 @@ def _daemon_loop():
         time.sleep(interval)
 
 
+def _backfill_covers():
+    with _conn() as conn:
+        books = conn.execute("SELECT isbn FROM books WHERE active = 1").fetchall()
+    for book in books:
+        _cache_cover(book["isbn"])
+
+
 # Guard against Flask debug reloader spawning two threads:
 # In debug mode the reloader spawns a child process with WERKZEUG_RUN_MAIN=true;
 # only that child (or any non-debug run) should start the daemon.
 _debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
 if not _debug_mode or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
     threading.Thread(target=_daemon_loop, daemon=True, name="bookalert-daemon").start()
+    threading.Thread(target=_backfill_covers, daemon=True, name="bookalert-cover-backfill").start()
 
 
 # ---------------------------------------------------------------------------
