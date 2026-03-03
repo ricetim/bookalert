@@ -16,9 +16,6 @@ def run_check_cycle(cfg: configparser.ConfigParser) -> None:
     db_path = Path(cfg["database"]["path"]).expanduser()
     api_key = cfg["join"]["api_key"]
     device_id = cfg["join"]["device_id"]
-    base_url = cfg.get("web", "base_url", fallback="").rstrip("/")
-    icon_url = f"{base_url}/static/icon.png" if base_url else ""
-
     with get_connection(db_path) as conn:
         init_db(conn)
         books = get_active_books(conn)
@@ -51,7 +48,7 @@ def run_check_cycle(cfg: configparser.ConfigParser) -> None:
                     continue
                 log.info("  New listing at $%.2f (%s) — sending notification.", price, condition)
                 if api_key and device_id:
-                    sent = send_notification(api_key, device_id, title, author, price, target, condition, icon_url)
+                    sent = send_notification(api_key, device_id, title, author, price, target, condition)
                     if sent:
                         mark_alert_sent(conn, isbn, price, condition)
                         log.info("  Notification sent.")

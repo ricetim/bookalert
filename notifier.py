@@ -27,8 +27,7 @@ def send_notification(
             f"(target: ${target:.2f})"
         ),
     }
-    if icon_url:
-        params["icon"] = icon_url
+    params["icon"] = icon_url or "https://raw.githubusercontent.com/ricetim/bookalert/master/static/icon.png"
     try:
         resp = requests.get(JOIN_URL, params=params, timeout=10)
         resp.raise_for_status()

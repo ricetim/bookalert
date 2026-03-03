@@ -28,7 +28,6 @@ def _build_cfg():
         "BOOKALERT_JOIN_API_KEY":   ("join",     "api_key"),
         "BOOKALERT_JOIN_DEVICE_ID": ("join",     "device_id"),
         "BOOKALERT_CHECK_INTERVAL": ("daemon",   "check_interval_minutes"),
-        "BOOKALERT_BASE_URL":       ("web",      "base_url"),
     }.items():
         val = os.environ.get(env_var)
         if val:
