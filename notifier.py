@@ -25,6 +25,7 @@ def send_notification(
             f"{title} by {author} is available for ${price:.2f}{cond_str} "
             f"(target: ${target:.2f})"
         ),
+        "icon": "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4da.png",
     }
     try:
         resp = requests.get(JOIN_URL, params=params, timeout=10)
