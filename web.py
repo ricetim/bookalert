@@ -13,7 +13,7 @@ from flask import Flask, render_template, request, redirect, url_for, send_file
 
 from config import load_config
 from daemon import run_check_cycle
-from db import get_connection, init_db, add_book, remove_book, list_books, get_history, get_alerts, record_price, update_target_price
+from db import get_connection, init_db, add_book, remove_book, list_books, get_history, get_alerts, get_weekly_history, record_price, update_target_price
 from scraper import fetch_book
 
 log = logging.getLogger(__name__)
@@ -128,7 +128,8 @@ def cover(isbn: str):
 def books():
     with _conn() as conn:
         rows = list_books(conn)
-    return render_template("books.html", books=rows)
+        sparklines = get_weekly_history(conn)
+    return render_template("books.html", books=rows, sparklines=sparklines)
 
 
 @app.get("/add")
@@ -189,6 +190,16 @@ def add_poll(job_id: str):
     return render_template("_poll_done.html", status="done", job=job)
 
 
+_CHART_MAX_POINTS = 120
+
+
+def _compress_chart_rows(rows: list) -> list:
+    if len(rows) <= _CHART_MAX_POINTS:
+        return rows
+    step = (len(rows) - 1) / (_CHART_MAX_POINTS - 1)
+    return [rows[round(i * step)] for i in range(_CHART_MAX_POINTS)]
+
+
 @app.get("/history/<isbn>")
 def history(isbn: str):
     with _conn() as conn:
@@ -201,9 +212,10 @@ def history(isbn: str):
         return redirect(url_for("books"))
 
     reversed_rows = list(reversed(rows))
+    chart_rows = _compress_chart_rows(reversed_rows)
     chart_json = json.dumps({
-        "labels": [r["checked_at"][:10] for r in reversed_rows],
-        "prices": [r["lowest_price"] for r in reversed_rows],
+        "labels": [r["checked_at"][:10] for r in chart_rows],
+        "prices": [r["lowest_price"] for r in chart_rows],
     })
 
     return render_template(

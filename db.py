@@ -154,10 +154,26 @@ def get_history(conn: sqlite3.Connection, isbn: str) -> list[sqlite3.Row]:
         SELECT * FROM price_history
         WHERE isbn = ?
         ORDER BY checked_at DESC
-        LIMIT 100
         """,
         (isbn,),
     ).fetchall()
+
+
+def get_weekly_history(conn: sqlite3.Connection) -> dict[str, list[dict]]:
+    """Return last 7 days of price history for all books, grouped by isbn, oldest first."""
+    rows = conn.execute("""
+        SELECT isbn, checked_at, lowest_price
+        FROM price_history
+        WHERE checked_at >= datetime('now', '-7 days')
+        ORDER BY isbn, checked_at ASC
+    """).fetchall()
+    result: dict[str, list[dict]] = {}
+    for row in rows:
+        result.setdefault(row["isbn"], []).append({
+            "t": row["checked_at"][:10],
+            "p": row["lowest_price"],
+        })
+    return result
 
 
 def get_alerts(conn: sqlite3.Connection, limit: int = 200) -> list[sqlite3.Row]:

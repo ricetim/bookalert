@@ -19,6 +19,12 @@
 
   .ba-table tbody tr:hover .btn-edit-price { opacity: 1; }
   .btn-edit-price:hover { color: var(--accent-text); }
+
+  canvas.sparkline {
+    display: block;
+    background: #0f1117;
+    border-radius: 3px;
+  }
 </style>
 {% endblock %}
 
@@ -39,6 +45,7 @@
         <th>Target</th>
         <th>Current</th>
         <th>Condition</th>
+        <th style="width:130px">7d Trend</th>
         <th>Checked</th>
         <th></th>
       </tr>
@@ -84,6 +91,10 @@
           {% endif %}
         </td>
         <td class="td-secondary" style="font-size:0.82rem">{{ b['current_condition'] or '—' }}</td>
+        <td style="padding:0.4rem 0.75rem;vertical-align:middle">
+          <canvas class="sparkline" width="120" height="36"
+                  data-spark="{{ sparklines.get(b['isbn'], []) | tojson }}"></canvas>
+        </td>
         <td class="td-muted td-mono" style="font-size:0.72rem">
           {{ b['price_as_of'][:16] if b['price_as_of'] else '—' }}
         </td>
@@ -112,4 +123,43 @@
   <a href="{{ url_for('add_form') }}" class="btn-primary">Add your first book</a>
 </div>
 {% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('canvas.sparkline').forEach(function (canvas) {
+    var data = JSON.parse(canvas.dataset.spark);
+    var prices = data.map(function (d) { return d.p; });
+    var labels = data.map(function (d) { return d.t; });
+
+    new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: prices,
+          spanGaps: true,
+          borderColor: '#ffe566',
+          backgroundColor: 'transparent',
+          borderWidth: 1,
+          pointRadius: 0,
+          fill: false,
+          tension: 0.35,
+        }]
+      },
+      options: {
+        responsive: false,
+        animation: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: false },
+        },
+        scales: {
+          x: { display: false },
+          y: { display: false },
+        },
+      }
+    });
+  });
+});
+</script>
 {% endblock %}
