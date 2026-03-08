@@ -93,7 +93,7 @@
         <td class="td-secondary" style="font-size:0.82rem">{{ b['current_condition'] or '—' }}</td>
         <td style="padding:0.4rem 0.75rem;vertical-align:middle">
           <canvas class="sparkline" width="120" height="36"
-                  data-spark="{{ sparklines.get(b['isbn'], []) | tojson }}"></canvas>
+                  data-spark='{{ sparklines.get(b["isbn"], []) | tojson }}'></canvas>
         </td>
         <td class="td-muted td-mono" style="font-size:0.72rem">
           {{ b['price_as_of'][:16] if b['price_as_of'] else '—' }}
