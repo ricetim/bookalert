@@ -19,7 +19,7 @@ Bookalert monitors book prices on [Bookfinder.com](https://www.bookfinder.com) a
 ### 1. Pull the image
 
 ```bash
-docker pull timhrice/bookalert:latest
+docker pull ricetim/bookalert:latest
 ```
 
 ### 2. Add to your `docker-compose.yml`
@@ -27,7 +27,7 @@ docker pull timhrice/bookalert:latest
 ```yaml
 services:
   bookalert:
-    image: timhrice/bookalert:latest
+    image: ricetim/bookalert:latest
     container_name: bookalert
     restart: unless-stopped
     ports:
